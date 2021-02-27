@@ -90,3 +90,34 @@ Strip any padding, and only align the type to a byte. This will like have negati
 
 Force the type to have an alignment of at least `n`.
 
+# 3. Ownership
+
+## 3.5 Lifetime Elision
+
+- Each elided lifetime in input position becomes a distinct lifetime parameter.
+
+- If there is exactly one input lifetime poisition (elided or not), that lifetime is assigned to all elided output lifetimes.
+
+- If there are multiple input lifetime positions, but one of them is `&self` or `&mut self`, the lifetime of `self` is assigned to all elided output lifetimes.
+
+- Otherwise, it is an error to elide an output lifetime.
+
+## 3.6 Unbounded Lifetimes
+
+Example, dereferencing a raw pointer. Such a lifetime becomes as big as context demands.
+
+## 3.7 Higher-Rank Trait Bounds
+
+```rust
+struct Closure<F> {
+    func: F
+}
+
+impl<F> Closure<F>
+where for<'a> F: Fn(&'a (u8, u16)) -> &'a u8,
+{
+    fn call<'a>(&'a self) -> &'a u8 {
+        (self.func)(&self.data)
+    }
+}
+```

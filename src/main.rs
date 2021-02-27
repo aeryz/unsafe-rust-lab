@@ -1,24 +1,26 @@
-use std::mem;
+struct Closure<F> {
+    data: (u8, u16),
+    func: F,
+}
 
-struct Foo<T, U> {
-    count: u16,
-    data1: T,
-    data2: U,
+impl<F> Closure<F>
+where
+    F: Fn(&(u8, u16)) -> &u8,
+{
+    fn call<'a>(&'a self) -> &'a u8 {
+        (self.func)(&self.data)
+    }
+}
+
+fn do_it<'b>(data: &'b (u8, u16)) -> &'b u8 {
+    &data.0
 }
 
 fn main() {
-    println!("Hello, world!");
-
-    let foo1: Foo<u16, u32> = Foo {
-        count: 1,
-        data1: 1,
-        data2: 1,
+    let closure = Closure {
+        data: (1, 1),
+        func: do_it,
     };
-    let foo2: Foo<u32, u16> = Foo {
-        count: 1,
-        data1: 1,
-        data2: 1,
-    };
-
-    println!("{} {}", mem::size_of_val(&foo1), mem::size_of_val(&foo2));
+    let a = closure.call();
+    println!("{}", a);
 }
