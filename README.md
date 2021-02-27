@@ -53,3 +53,40 @@ struct B {
 Because they lack a statically known size, these types can only exist behind a pointer.
 
 Example: `[T]`, `str` and `dyn MyTrait`.
+
+### Zero Sized Types
+
+Types that have no size occupies no space.
+
+### Empty Types
+
+```rust
+enum Void {}
+```
+
+This can be used like `Result<T, Void>` where you must return a `Result` but it is guaranteed that
+any error won't occur.
+
+## 2.3 Other reprs
+
+### repr(C)
+
+The order, size, and alignment of fields is exactly what you would expect from C or C++.
+
+### repr(transparent)
+
+This can only be used on struct with a single non-zero-sized field. The effect is that the layout and ABI of
+the whole struct is guaranteed to be the same as that one field.
+
+### repr(u\*), repr(i\*)
+
+These specify the size to make fieldless enum (C-like enums). Only works on fieldless enums.
+
+### repr(packed)
+
+Strip any padding, and only align the type to a byte. This will like have negative side-effects and can cause undefined behavior.
+
+### repr(align(n))
+
+Force the type to have an alignment of at least `n`.
+
