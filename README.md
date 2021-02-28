@@ -121,3 +121,62 @@ where for<'a> F: Fn(&'a (u8, u16)) -> &'a u8,
     }
 }
 ```
+
+## 3.8 Subtyping and Variance
+
+### Variance
+
+- `F` is covariant if `F<Sub>` is a subtype of `F<Super>` (subtyping "passes through")
+- `F` is contravariant if `F<Super>` is a subtype of `F<Sub>` (subtyping is "inverted")
+- `F` is invariant otherwise (no subtyping relationship exists)
+
+```rust
+              'a          T               U
+-----------------------------------------------------
+&'a T         covariant   covariant       -
+&'a mut T     covariant   invariant       -
+Box<T>        -           covariant       -
+Vec<T>        -           covariant       -
+UnsafeCell<T> -           invariant       -
+Cell<T>       -           invariant       -
+fn(T) -> U    -           contravariant   covariant
+*const T      -           covariant       -
+*mut T        -           invariant       -
+```
+## 3.9 Drop Check
+
+### may_dangle
+
+```rust
+unsafe impl<#[may_dangle] 'a> Drop for Inspector<'a> {
+    fn drop(&mut self) {
+        println!("... {}", self.1);
+    }
+}
+```
+
+- When the order of drop is important, it is best to use `ManuallyDrop`.
+
+## 3.10 PhantomData
+
+If `Vec` would defined like this:
+```rust
+struct Vec<T> {
+    data: *const T,
+    len: usize,
+    cap: usize,
+}
+```
+
+The drop checker will determine that `Vec<T>` does not own any values of type T. This will make it conclude that it doesn't need to worry about Vec dropping any T's in its destructor for determining drop check soundness.
+
+To strictly tell the drop checker that `Vec<T>` owns T, we use `PhantomData`.
+
+```rust
+struct Vec<T> {
+    data: *const T, // *const for variance
+    len: usize,
+    cap: usize,
+    _marker: marker::PhantomData<T>,
+}
+```

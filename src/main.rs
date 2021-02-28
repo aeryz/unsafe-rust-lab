@@ -1,26 +1,22 @@
-struct Closure<F> {
-    data: (u8, u16),
-    func: F,
-}
+#![feature(dropck_eyepatch)]
 
-impl<F> Closure<F>
-where
-    F: Fn(&(u8, u16)) -> &u8,
-{
-    fn call<'a>(&'a self) -> &'a u8 {
-        (self.func)(&self.data)
+struct Inspector<'a>(&'a u8, &'static str);
+
+unsafe impl<#[may_dangle] 'a> Drop for Inspector<'a> {
+    fn drop(&mut self) {
+        println!("Inspector(_, {}) knows when *not* to inspect.", self.1);
     }
 }
 
-fn do_it<'b>(data: &'b (u8, u16)) -> &'b u8 {
-    &data.0
+struct World<'a> {
+    days: Box<u8>,
+    inspector: Option<Inspector<'a>>,
 }
 
 fn main() {
-    let closure = Closure {
-        data: (1, 1),
-        func: do_it,
+    let mut world = World {
+        inspector: None,
+        days: Box::new(1),
     };
-    let a = closure.call();
-    println!("{}", a);
+    world.inspector = Some(Inspector(&world.days, "gatget"));
 }
